@@ -62,7 +62,7 @@ public class BadSnake {
         int[] food = new int[]{r.nextInt(screenHeight - 2) + 1, r.nextInt(screenWidth - 2) + 1};
 
         String d = "R";
-        int sc = 0;
+        int sc = 0; // Score
 
         // Boucle principale du jeu
         while (true) {
@@ -119,8 +119,7 @@ public class BadSnake {
                         drawn = true;
                     }
 
-                    // Affichage serpent
-                    for (int[] px : s) {
+                    for (int[] px : s) { // Pixel
                         if (px[0] == i && px[1] == j) {
                             sb.append("#");
                             drawn = true;
