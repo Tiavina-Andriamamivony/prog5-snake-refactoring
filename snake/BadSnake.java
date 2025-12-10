@@ -10,7 +10,7 @@ import java.io.IOException;
  * Votre mission : le refactorer pour en faire un code propre et maintenable.
  *
  * PROBLÈMES À CORRIGER :
- * 1. Noms de variables cryptiques (sh, sw, s, f, d, mv, hd, etc.)
+ * 1. Noms de variables cryptiques (screenHeight, screenWidth, s, f, d, moveHead, hd, etc.)
  * 2. Présence de « magic numbers » partout (20, 40, 120, etc.)
  * 3. Méthode main() monolithique – aucune séparation des responsabilités
  * 4. Pas de classes/objets – tout repose sur des primitives et des tableaux
@@ -19,57 +19,73 @@ import java.io.IOException;
  * 7. Aucune constante pour les caractères spéciaux
  * 8. Détection de collisions inefficace (boucles imbriquées)
  * 9. Aucune validation des entrées utilisateur
- * 10. Séquences d’échappement du terminal codées en dur
+ * 10. Séquences d'échappement du terminal codées en dur
  *
  * AMÉLIORATIONS SUGGÉRÉES :
  * - Créer des classes : Game, Snake, Food, Position, Direction (enum)
  * - Extraire des constantes : SCREEN_HEIGHT, SCREEN_WIDTH, TICK_DELAY
  * - Séparer en méthodes : update(), render(), handleInput(), checkCollisions()
- * - Utiliser des noms explicites : screenHeight au lieu de sh, snake au lieu de s
+ * - Utiliser des noms explicites : screenHeight au lieu de screenHeight, snake au lieu de s
  * - Envisager une grille 2D pour une détection de collision plus efficace
  * - Ajouter des commentaires
  */
 public class BadSnake {
-    public static int[] mv(int[] h, String d) {
-        int[] k = new int[]{h[0], h[1]};
-        if (d.equals("L")) k[1]--;
-        else if (d.equals("R")) k[1]++;
-        else if (d.equals("U")) k[0]--;
-        else if (d.equals("D")) k[0]++;
-        return k;
+
+    // Déplace la tête du serpent selon la direction donnée
+    public static int[] moveHead(int[] head, String direction) {
+        int[] newHead = new int[]{head[0], head[1]};
+        if (direction.equals("L")) newHead[1]--;
+        else if (direction.equals("R")) newHead[1]++;
+        else if (direction.equals("U")) newHead[0]--;
+        else if (direction.equals("D")) newHead[0]++;
+        return newHead;
     }
 
     public static void main(String[] args) throws Exception {
-        int sh = 20;
-        int sw = 40;
 
+        //------Game begin------//
+        // Configuration dimensions écran
+        int screenHeight = 20;
+        int screenWidth = 40;
+
+        //REPLACED WITH A LIST OF POSITION OBJECTS
+        // Initialisation serpent avec 3 segments
         List<int[]> s = new ArrayList<>();
         s.add(new int[]{10, 10});
         s.add(new int[]{10, 9});
         s.add(new int[]{10, 8});
 
+
+        //DONE
+        // Génération position aléatoire de la nourriture
         Random r = new Random();
-        int[] f = new int[]{r.nextInt(sh - 2) + 1, r.nextInt(sw - 2) + 1};  // 'f' = food?
+        int[] food = new int[]{r.nextInt(screenHeight - 2) + 1, r.nextInt(screenWidth - 2) + 1};
 
         String d = "R";
         int sc = 0;
 
+        // Boucle principale du jeu
         while (true) {
+            // Lecture entrée clavier si disponible
             if (System.in.available() > 0) {
                 char c = (char) System.in.read();
+                // Changement direction avec validation anti-retour
                 if (c == 'a' && !d.equals("R")) d = "L";
                 else if (c == 'd' && !d.equals("L")) d = "R";
                 else if (c == 'w' && !d.equals("D")) d = "U";
                 else if (c == 's' && !d.equals("U")) d = "D";
             }
 
-            int[] hd = mv(s.get(0), d);
-            if (hd[0] <= 0 || hd[0] >= sh - 1 || hd[1] <= 0 || hd[1] >= sw - 1) {
+            // Calcul nouvelle position de la tête
+            int[] hd = moveHead(s.get(0), d);
+
+            // Vérification collision avec les murs
+            if (hd[0] <= 0 || hd[0] >= screenHeight - 1 || hd[1] <= 0 || hd[1] >= screenWidth - 1) {
                 System.out.println("GAME OVER - SCORE = " + sc);
                 return;
             }
 
-           // Vérification de collision en O(n) — on pourrait utiliser un Set pour obtenir du O(1)
+            // Vérification collision avec le corps du serpent
             for (int i = 0; i < s.size(); i++) {
                 int[] b = s.get(i);
                 if (hd[0] == b[0] && hd[1] == b[1]) {
@@ -78,25 +94,32 @@ public class BadSnake {
                 }
             }
 
-            if (hd[0] == f[0] && hd[1] == f[1]) {
+            // Vérification si nourriture mangée
+            if (hd[0] == food[0] && hd[1] == food[1]) {
                 sc++;
-                f = new int[]{r.nextInt(sh - 2) + 1, r.nextInt(sw - 2) + 1};
+                // Nouvelle nourriture générée
+                food = new int[]{r.nextInt(screenHeight - 2) + 1, r.nextInt(screenWidth - 2) + 1};
             } else {
+                // Suppression dernier segment si pas de croissance
                 s.remove(s.size() - 1);
             }
 
+            // Ajout nouvelle tête
             s.add(0, hd);
 
+            // Construction affichage
             StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < sh; i++) {
-                for (int j = 0; j < sw; j++) {
+            for (int i = 0; i < screenHeight; i++) {
+                for (int j = 0; j < screenWidth; j++) {
                     boolean drawn = false;
 
-                    if (i == f[0] && j == f[1]) {
+                    // Affichage nourriture
+                    if (i == food[0] && j == food[1]) {
                         sb.append("*");
                         drawn = true;
                     }
 
+                    // Affichage serpent
                     for (int[] px : s) {
                         if (px[0] == i && px[1] == j) {
                             sb.append("#");
@@ -105,21 +128,24 @@ public class BadSnake {
                         }
                     }
 
+                    // Affichage murs ou espaces vides
                     if (!drawn) {
-                        if (i == 0 || j == 0 || i == sh - 1 || j == sw - 1) 
+                        if (i == 0 || j == 0 || i == screenHeight - 1 || j == screenWidth - 1)
                             sb.append("X");
-                        else 
+                        else
                             sb.append(" ");
                     }
                 }
                 sb.append("\n");
             }
 
-            System.out.print("\033[H\033[2J");  
+            // Effacement écran et affichage
+            System.out.print("\033[H\033[2J");
             System.out.flush();
             System.out.println(sb.toString());
             System.out.println("Score: " + sc);
 
+            // Délai entre chaque frame
             Thread.sleep(120);
         }
     }
